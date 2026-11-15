@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -24,7 +24,7 @@ def process_pending_notifications(db: Session, batch_size: int = 50) -> int:
                 extra={"event_type": message.event_type, "recipient": message.recipient},
             )
             message.status = "sent"
-            message.processed_at = datetime.now(timezone.utc)
+            message.processed_at = datetime.now(UTC)
             message.attempts += 1
         except Exception as exc:
             message.status = "failed"

@@ -34,7 +34,7 @@ docs/               Architecture, API, security, development, operations
 
 ## Prerequisites
 
-- Python 3.12 (code supports Python 3.10+)
+- Python 3.12 (minimum supported Python is 3.11)
 - Node.js 22 and npm
 - PostgreSQL 16 for local production-like use, or Docker Compose
 
