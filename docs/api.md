@@ -21,7 +21,7 @@ All business endpoints are under `/api/v1`. Interactive OpenAPI documentation is
 | GET | `/reports/sales-summary` | Sales and stock summary | Authenticated |
 | GET | `/admin/audit-logs` | Paginated audit history | Admin |
 
-List endpoints use bounded pagination (`offset`, `limit`). Validation errors follow FastAPI's structured 422 response. Domain conflicts return 409, missing resources 404, and failed authentication 401. API errors never include stack traces.
+List endpoints use bounded pagination (`offset`, `limit`). The order list also accepts `status` (`confirmed`, `processing`, `shipped`, `delivered`, or `cancelled`) and `customer_id` filters; when provided together, both are applied. Validation errors follow FastAPI's structured 422 response. Domain conflicts return 409, missing resources 404, and failed authentication 401. API errors never include stack traces.
 
 ## Order creation
 

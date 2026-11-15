@@ -1,3 +1,4 @@
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -28,8 +29,16 @@ def get_orders(
     user: CurrentUser,
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=100),
+    status: Literal["confirmed", "processing", "shipped", "delivered", "cancelled"] | None = None,
+    customer_id: UUID | None = None,
 ) -> list[Order]:
-    return list_orders(db, offset=offset, limit=limit)
+    return list_orders(
+        db,
+        offset=offset,
+        limit=limit,
+        status=status,
+        customer_id=customer_id,
+    )
 
 
 @router.post("", response_model=OrderRead, status_code=status.HTTP_201_CREATED)

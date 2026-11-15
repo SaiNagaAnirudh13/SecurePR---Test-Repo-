@@ -16,7 +16,12 @@ export function OrdersPage() {
   const [customerId, setCustomerId] = useState('')
   const [productId, setProductId] = useState('')
   const [quantity, setQuantity] = useState(1)
+  const [statusFilter, setStatusFilter] = useState('')
   const sortedOrders = useMemo(() => [...(orders.data ?? [])].sort((a, b) => b.created_at.localeCompare(a.created_at)), [orders.data])
+  const visibleOrders = useMemo(
+    () => sortedOrders.filter((order) => !statusFilter || order.status === statusFilter),
+    [sortedOrders, statusFilter],
+  )
 
   async function createOrder(event: FormEvent) {
     event.preventDefault()
@@ -44,10 +49,10 @@ export function OrdersPage() {
         <button className="primary-button" type="submit" disabled={!customers.data?.length || !products.data?.length}>Create order</button>
       </form>}
       <section className="panel">
-        <div className="panel-heading"><div><h2>All orders</h2><p>{orders.data?.length ?? 0} records in this view</p></div></div>
-        <DataState loading={orders.loading} error={orders.error} empty={sortedOrders.length === 0} />
-        {!orders.loading && !orders.error && sortedOrders.length > 0 && <div className="table-wrap"><table><thead><tr><th>ORDER</th><th>CUSTOMER ID</th><th>CREATED</th><th>LINES</th><th>SUBTOTAL</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody>
-          {sortedOrders.map((order) => <tr key={order.id}><td className="order-link">{order.order_number}</td><td className="muted-cell">{order.customer_id.slice(0, 8)}…</td><td>{formatDate(order.created_at)}</td><td>{order.items.length}</td><td>{formatCurrency(order.subtotal, order.currency)}</td><td className="amount">{formatCurrency(order.total_amount, order.currency)}</td><td><StatusBadge status={order.status} /></td></tr>)}
+        <div className="panel-heading"><div><h2>All orders</h2><p>{visibleOrders.length} of {orders.data?.length ?? 0} records</p></div><label className="order-filter">Status<select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}><option value="">All statuses</option><option value="confirmed">Confirmed</option><option value="processing">Processing</option><option value="shipped">Shipped</option><option value="delivered">Delivered</option><option value="cancelled">Cancelled</option></select></label></div>
+        <DataState loading={orders.loading} error={orders.error} empty={visibleOrders.length === 0} />
+        {!orders.loading && !orders.error && visibleOrders.length > 0 && <div className="table-wrap"><table><thead><tr><th>ORDER</th><th>CUSTOMER ID</th><th>CREATED</th><th>LINES</th><th>SUBTOTAL</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody>
+          {visibleOrders.map((order) => <tr key={order.id}><td className="order-link">{order.order_number}</td><td className="muted-cell">{order.customer_id.slice(0, 8)}…</td><td>{formatDate(order.created_at)}</td><td>{order.items.length}</td><td>{formatCurrency(order.subtotal, order.currency)}</td><td className="amount">{formatCurrency(order.total_amount, order.currency)}</td><td><StatusBadge status={order.status} /></td></tr>)}
         </tbody></table></div>}
       </section>
     </>

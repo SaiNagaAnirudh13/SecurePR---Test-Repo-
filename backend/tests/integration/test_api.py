@@ -56,3 +56,26 @@ def test_order_api_creates_order_and_audit_event(
     assert response.status_code == 201
     assert response.json()["status"] == "confirmed"
     assert response.json()["total_amount"] == "649.48"
+    order_id = response.json()["id"]
+
+    confirmed_orders = client.get(
+        "/api/v1/orders",
+        headers=auth_headers,
+        params={"status": "confirmed", "customer_id": str(customer.id)},
+    )
+    cancelled_orders = client.get(
+        "/api/v1/orders",
+        headers=auth_headers,
+        params={"status": "cancelled"},
+    )
+    invalid_status = client.get(
+        "/api/v1/orders",
+        headers=auth_headers,
+        params={"status": "awaiting"},
+    )
+
+    assert confirmed_orders.status_code == 200
+    assert [order["id"] for order in confirmed_orders.json()] == [order_id]
+    assert cancelled_orders.status_code == 200
+    assert cancelled_orders.json() == []
+    assert invalid_status.status_code == 422
