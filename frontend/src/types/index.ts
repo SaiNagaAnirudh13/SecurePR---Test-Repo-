@@ -45,6 +45,7 @@ export interface OrderItem {
   product_id: string
   sku: string
   product_name: string
+  warehouse_code: string | null
   quantity: number
   unit_price: string
   line_total: string

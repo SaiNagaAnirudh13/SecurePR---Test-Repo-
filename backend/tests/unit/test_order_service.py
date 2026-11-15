@@ -118,6 +118,102 @@ def test_shipment_dispatch_consumes_reserved_stock(db, order_context):
     assert inventory.quantity_reserved == 0
 
 
+def test_order_allocates_across_warehouses_and_cancellation_releases_each_reservation(
+    db, order_context
+):
+    user, customer, product, first_inventory = order_context
+    second_inventory = InventoryItem(
+        product_id=product.id,
+        warehouse_code="NYC-01",
+        quantity_on_hand=5,
+        quantity_reserved=0,
+        reorder_point=1,
+    )
+    db.add(second_inventory)
+    db.commit()
+
+    order = create_order(
+        db,
+        customer_id=customer.id,
+        user_id=user.id,
+        lines=[(product.id, 12)],
+        notes="",
+    )
+
+    allocations = {item.warehouse_code: item.quantity for item in order.items}
+    db.refresh(first_inventory)
+    db.refresh(second_inventory)
+    assert allocations == {"BOS-01": 10, "NYC-01": 2}
+    assert first_inventory.quantity_reserved == 10
+    assert second_inventory.quantity_reserved == 2
+
+    cancelled = transition_order(db, order=order, new_status="cancelled", actor_id=user.id)
+
+    db.refresh(first_inventory)
+    db.refresh(second_inventory)
+    assert cancelled.status == "cancelled"
+    assert first_inventory.quantity_reserved == 0
+    assert second_inventory.quantity_reserved == 0
+
+
+def test_order_rejects_when_aggregate_warehouse_stock_is_insufficient(db, order_context):
+    user, customer, product, first_inventory = order_context
+    second_inventory = InventoryItem(
+        product_id=product.id,
+        warehouse_code="NYC-01",
+        quantity_on_hand=5,
+        quantity_reserved=0,
+        reorder_point=1,
+    )
+    db.add(second_inventory)
+    db.commit()
+
+    with pytest.raises(DomainError, match="Insufficient inventory"):
+        create_order(
+            db,
+            customer_id=customer.id,
+            user_id=user.id,
+            lines=[(product.id, 16)],
+            notes="",
+        )
+
+    db.refresh(first_inventory)
+    db.refresh(second_inventory)
+    assert first_inventory.quantity_reserved == 0
+    assert second_inventory.quantity_reserved == 0
+
+
+def test_shipment_consumes_stock_from_each_allocated_warehouse(db, order_context):
+    user, customer, product, first_inventory = order_context
+    second_inventory = InventoryItem(
+        product_id=product.id,
+        warehouse_code="NYC-01",
+        quantity_on_hand=5,
+        quantity_reserved=0,
+        reorder_point=1,
+    )
+    db.add(second_inventory)
+    db.commit()
+    order = create_order(
+        db,
+        customer_id=customer.id,
+        user_id=user.id,
+        lines=[(product.id, 12)],
+        notes="",
+    )
+    transition_order(db, order=order, new_status="processing", actor_id=user.id)
+
+    shipped = transition_order(db, order=order, new_status="shipped", actor_id=user.id)
+
+    db.refresh(first_inventory)
+    db.refresh(second_inventory)
+    assert shipped.status == "shipped"
+    assert first_inventory.quantity_on_hand == 0
+    assert second_inventory.quantity_on_hand == 3
+    assert first_inventory.quantity_reserved == 0
+    assert second_inventory.quantity_reserved == 0
+
+
 def test_invalid_status_transition_is_rejected(db, order_context):
     user, customer, product, _inventory = order_context
     order = create_order(

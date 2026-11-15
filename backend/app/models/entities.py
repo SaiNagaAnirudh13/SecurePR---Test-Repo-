@@ -136,6 +136,7 @@ class OrderItem(Base):
     product_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("products.id"))
     sku: Mapped[str] = mapped_column(String(50))
     product_name: Mapped[str] = mapped_column(String(180))
+    warehouse_code: Mapped[str | None] = mapped_column(String(30))
     quantity: Mapped[int] = mapped_column(Integer)
     unit_price: Mapped[Decimal] = mapped_column(Numeric(12, 2))
     line_total: Mapped[Decimal] = mapped_column(Numeric(12, 2))

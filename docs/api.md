@@ -25,7 +25,7 @@ List endpoints use bounded pagination (`offset`, `limit`). Validation errors fol
 
 ## Order creation
 
-`POST /orders` accepts a customer ID, one or more product/quantity lines, and optional notes. The backend snapshots unit prices, computes an 8.25% illustrative tax, reserves stock and returns an order number. The tax rate is an intentionally simplified example and must be replaced with a jurisdiction-aware tax integration before real use.
+`POST /orders` accepts a customer ID, one or more product/quantity lines, and optional notes. The backend snapshots unit prices, computes an 8.25% illustrative tax, allocates available stock in warehouse-code order, and returns an order number. If fulfillment spans multiple locations, the response contains one order line per warehouse allocation, including `warehouse_code`; each line's quantity and total represent that location's share. The tax rate is an intentionally simplified example and must be replaced with a jurisdiction-aware tax integration before real use.
 
 ## Compatibility
 

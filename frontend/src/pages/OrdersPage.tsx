@@ -46,8 +46,8 @@ export function OrdersPage() {
       <section className="panel">
         <div className="panel-heading"><div><h2>All orders</h2><p>{orders.data?.length ?? 0} records in this view</p></div></div>
         <DataState loading={orders.loading} error={orders.error} empty={sortedOrders.length === 0} />
-        {!orders.loading && !orders.error && sortedOrders.length > 0 && <div className="table-wrap"><table><thead><tr><th>ORDER</th><th>CUSTOMER ID</th><th>CREATED</th><th>LINES</th><th>SUBTOTAL</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody>
-          {sortedOrders.map((order) => <tr key={order.id}><td className="order-link">{order.order_number}</td><td className="muted-cell">{order.customer_id.slice(0, 8)}…</td><td>{formatDate(order.created_at)}</td><td>{order.items.length}</td><td>{formatCurrency(order.subtotal, order.currency)}</td><td className="amount">{formatCurrency(order.total_amount, order.currency)}</td><td><StatusBadge status={order.status} /></td></tr>)}
+        {!orders.loading && !orders.error && sortedOrders.length > 0 && <div className="table-wrap"><table><thead><tr><th>ORDER</th><th>CUSTOMER ID</th><th>CREATED</th><th>LINES</th><th>FULFILLMENT</th><th>SUBTOTAL</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody>
+          {sortedOrders.map((order) => <tr key={order.id}><td className="order-link">{order.order_number}</td><td className="muted-cell">{order.customer_id.slice(0, 8)}…</td><td>{formatDate(order.created_at)}</td><td>{order.items.length}</td><td>{[...new Set(order.items.map((item) => item.warehouse_code).filter((code): code is string => code !== null))].join(', ') || '—'}</td><td>{formatCurrency(order.subtotal, order.currency)}</td><td className="amount">{formatCurrency(order.total_amount, order.currency)}</td><td><StatusBadge status={order.status} /></td></tr>)}
         </tbody></table></div>}
       </section>
     </>

@@ -24,6 +24,7 @@ class OrderItemRead(ORMModel):
     product_id: UUID
     sku: str
     product_name: str
+    warehouse_code: str | None
     quantity: int
     unit_price: Decimal
     line_total: Decimal

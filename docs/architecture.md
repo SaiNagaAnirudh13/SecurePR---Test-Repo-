@@ -6,7 +6,7 @@ EOMP is a modular monolith with a versioned FastAPI boundary and a separately de
 
 - **Identity:** users are assigned one role (`admin`, `operations`, or `analyst`). JWTs identify the user; authorization is evaluated against the current database role on each request.
 - **Customer and catalog:** business accounts own orders; product SKUs and prices are snapshotted onto order lines to preserve historical order values.
-- **Inventory:** stock is tracked per product and warehouse. Orders reserve available quantity; cancellation releases reservations; shipment dispatch consumes on-hand stock and clears reservations.
+- **Inventory:** stock is tracked per product and warehouse. Orders allocate across warehouses in stable warehouse-code order, recording each allocation on an order line. Cancellation releases the exact reservations; shipment dispatch consumes stock from those same locations.
 - **Order lifecycle:** orders move through confirmed → processing → shipped → delivered, with cancellation permitted before shipment. Invalid transitions are rejected.
 - **Payments and fulfillment:** payment intents are provider-neutral records only; shipment records are created at dispatch. No payment credentials or card data are collected.
 - **Audit and notifications:** business mutations produce audit records. Order confirmation writes a transactional notification to an outbox table; a worker processes pending messages.
@@ -16,7 +16,7 @@ EOMP is a modular monolith with a versioned FastAPI boundary and a separately de
 
 `API route → request schema validation → service/repository → SQLAlchemy unit of work → PostgreSQL`
 
-Order creation validates the customer, product and available inventory, writes order lines, reserves inventory, records an audit event and queues a notification in one database transaction. Conditional inventory updates protect against concurrent overselling. PostgreSQL row locks are used where supported.
+Order creation validates the customer, product and aggregate available inventory, writes warehouse-specific order lines, reserves stock, records an audit event and queues a notification in one database transaction. Conditional inventory updates protect against concurrent overselling. PostgreSQL row locks are used where supported.
 
 The UI reads live API data and keeps the access token in browser storage for this representative internal console. Production deployments should prefer a same-site secure cookie and a CSRF strategy. There is no client-side mock-data fallback.
 

@@ -41,23 +41,33 @@ def create_order(
         normalized[product_id] = normalized.get(product_id, 0) + quantity
 
     products: dict[UUID, Product] = {}
-    stock: dict[UUID, InventoryItem] = {}
-    for product_id, quantity in normalized.items():
+    allocations: dict[UUID, list[tuple[InventoryItem, int]]] = {}
+    for product_id in sorted(normalized, key=str):
+        quantity = normalized[product_id]
         product = db.scalar(
             select(Product).where(Product.id == product_id, Product.is_active.is_(True))
         )
         if product is None:
             raise DomainError(f"Active product {product_id} was not found", 404)
-        inventory = db.scalar(
+        inventory_rows = db.scalars(
             select(InventoryItem)
             .where(InventoryItem.product_id == product_id)
             .order_by(InventoryItem.warehouse_code)
             .with_for_update()
-        )
-        if inventory is None or inventory.available_quantity < quantity:
+        ).all()
+        remaining = quantity
+        product_allocations: list[tuple[InventoryItem, int]] = []
+        for inventory in inventory_rows:
+            allocated = min(max(inventory.available_quantity, 0), remaining)
+            if allocated:
+                product_allocations.append((inventory, allocated))
+                remaining -= allocated
+            if remaining == 0:
+                break
+        if remaining:
             raise DomainError(f"Insufficient inventory for SKU {product.sku}", 409)
         products[product_id] = product
-        stock[product_id] = inventory
+        allocations[product_id] = product_allocations
 
     subtotal = sum(
         (products[product_id].unit_price * quantity for product_id, quantity in normalized.items()),
@@ -81,31 +91,32 @@ def create_order(
     db.add(order)
     db.flush()
 
-    for product_id, quantity in normalized.items():
+    for product_id in sorted(normalized, key=str):
         product = products[product_id]
-        inventory = stock[product_id]
-        reserved_id = db.execute(
-            update(InventoryItem)
-            .where(
-                InventoryItem.id == inventory.id,
-                InventoryItem.quantity_on_hand - InventoryItem.quantity_reserved >= quantity,
+        for inventory, allocated in allocations[product_id]:
+            reserved_id = db.execute(
+                update(InventoryItem)
+                .where(
+                    InventoryItem.id == inventory.id,
+                    InventoryItem.quantity_on_hand - InventoryItem.quantity_reserved >= allocated,
+                )
+                .values(quantity_reserved=InventoryItem.quantity_reserved + allocated)
+                .returning(InventoryItem.id)
+            ).scalar_one_or_none()
+            if reserved_id is None:
+                raise DomainError(f"Inventory changed while reserving SKU {product.sku}", 409)
+            db.add(
+                OrderItem(
+                    order_id=order.id,
+                    product_id=product.id,
+                    sku=product.sku,
+                    product_name=product.name,
+                    warehouse_code=inventory.warehouse_code,
+                    quantity=allocated,
+                    unit_price=product.unit_price,
+                    line_total=product.unit_price * allocated,
+                )
             )
-            .values(quantity_reserved=InventoryItem.quantity_reserved + quantity)
-            .returning(InventoryItem.id)
-        ).scalar_one_or_none()
-        if reserved_id is None:
-            raise DomainError(f"Inventory changed while reserving SKU {product.sku}", 409)
-        db.add(
-            OrderItem(
-                order_id=order.id,
-                product_id=product.id,
-                sku=product.sku,
-                product_name=product.name,
-                quantity=quantity,
-                unit_price=product.unit_price,
-                line_total=product.unit_price * quantity,
-            )
-        )
 
     db.add(
         Notification(
@@ -120,7 +131,10 @@ def create_order(
         action="order.created",
         resource_type="order",
         resource_id=str(order.id),
-        details={"order_number": order.order_number, "item_count": len(normalized)},
+        details={
+            "order_number": order.order_number,
+            "item_count": sum(len(allocations[product_id]) for product_id in normalized),
+        },
     )
     db.commit()
     return get_order(db, order.id)
@@ -141,23 +155,32 @@ def transition_order(db: Session, *, order: Order, new_status: str, actor_id: UU
     if new_status not in ALLOWED_TRANSITIONS.get(order.status, set()):
         raise DomainError(f"Cannot transition order from {order.status} to {new_status}", 409)
     previous_status = order.status
+    items = sorted(order.items, key=lambda item: (str(item.product_id), item.warehouse_code or ""))
     if new_status == "cancelled":
-        for item in order.items:
+        for item in items:
+            if item.warehouse_code is None:
+                raise DomainError(f"Reserved inventory is inconsistent for SKU {item.sku}", 409)
             inventory = db.scalar(
                 select(InventoryItem)
-                .where(InventoryItem.product_id == item.product_id)
-                .order_by(InventoryItem.warehouse_code)
+                .where(
+                    InventoryItem.product_id == item.product_id,
+                    InventoryItem.warehouse_code == item.warehouse_code,
+                )
                 .with_for_update()
             )
             if inventory is None or inventory.quantity_reserved < item.quantity:
                 raise DomainError(f"Reserved inventory is inconsistent for SKU {item.sku}", 409)
             inventory.quantity_reserved -= item.quantity
     elif new_status == "shipped":
-        for item in order.items:
+        for item in items:
+            if item.warehouse_code is None:
+                raise DomainError(f"Reserved inventory is inconsistent for SKU {item.sku}", 409)
             inventory = db.scalar(
                 select(InventoryItem)
-                .where(InventoryItem.product_id == item.product_id)
-                .order_by(InventoryItem.warehouse_code)
+                .where(
+                    InventoryItem.product_id == item.product_id,
+                    InventoryItem.warehouse_code == item.warehouse_code,
+                )
                 .with_for_update()
             )
             if (

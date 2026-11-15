@@ -37,7 +37,16 @@ def test_order_api_creates_order_and_audit_event(
         InventoryItem(
             product_id=product.id,
             warehouse_code="SEA-01",
-            quantity_on_hand=5,
+            quantity_on_hand=1,
+            quantity_reserved=0,
+            reorder_point=1,
+        )
+    )
+    db.add(
+        InventoryItem(
+            product_id=product.id,
+            warehouse_code="PDX-01",
+            quantity_on_hand=1,
             quantity_reserved=0,
             reorder_point=1,
         )
@@ -56,3 +65,7 @@ def test_order_api_creates_order_and_audit_event(
     assert response.status_code == 201
     assert response.json()["status"] == "confirmed"
     assert response.json()["total_amount"] == "649.48"
+    assert {item["warehouse_code"]: item["quantity"] for item in response.json()["items"]} == {
+        "PDX-01": 1,
+        "SEA-01": 1,
+    }
