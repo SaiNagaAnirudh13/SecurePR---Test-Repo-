@@ -31,6 +31,8 @@ npm run dev
 
 Open `http://localhost:5173`. Vite proxies `/api` and `/health` to the backend at port 8000. Ensure `DATABASE_URL` is configured in the environment (PostgreSQL by default in `.env.example`; for SQLite use `sqlite:///./eomp.db`).
 
+The demo seed adds a sample customer, product, inventory balance, and the `operations` and `analyst` roles. It does not create a user or set a default password. The bootstrap command creates the initial administrator; create additional users through your approved local database provisioning process and assign only the role required for their work.
+
 ## Checks
 
 ```powershell
