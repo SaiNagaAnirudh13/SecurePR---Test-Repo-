@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from uuid import UUID
 
-from jose import JWTError, jwt
+import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import settings
@@ -19,9 +19,7 @@ def verify_password(password: str, hashed_password: str) -> bool:
 
 
 def create_access_token(user_id: UUID, role: str) -> str:
-    expires_at = datetime.now(timezone.utc) + timedelta(
-        minutes=settings.access_token_expire_minutes
-    )
+    expires_at = datetime.now(UTC) + timedelta(minutes=settings.access_token_expire_minutes)
     return jwt.encode(
         {"sub": str(user_id), "role": role, "exp": expires_at},
         settings.secret_key.get_secret_value(),
@@ -36,7 +34,7 @@ def decode_access_token(token: str) -> dict[str, str] | None:
             settings.secret_key.get_secret_value(),
             algorithms=[ALGORITHM],
         )
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 
 

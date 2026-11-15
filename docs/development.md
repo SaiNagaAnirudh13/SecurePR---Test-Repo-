@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- Python 3.12 (3.10+ source compatibility), Node.js 22, npm, Git
+- Python 3.12 (minimum supported Python is 3.11), Node.js 22, npm, Git
 - PostgreSQL 16 for a production-like local run; SQLite is used by tests
 - Docker Compose is optional
 
