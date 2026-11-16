@@ -94,3 +94,11 @@ Pull requests targeting `main` run Python dependency installation, Ruff checks, 
 ## Intentionally simplified components
 
 Tax is a fixed illustrative rate; stock reservation uses the first matching warehouse; payment endpoints create pending provider-neutral intents and never process sensitive payment data; notifications are logged by the worker rather than sent externally. Account recovery, advanced rate limiting, secure-cookie sessions, and external observability integrations are production hardening items. See [operations](docs/operations.md) and [security](docs/security.md).
+
+
+
+
+
+VSecurePR provides intelligent pull request analysis.
+## SecurePR Deployment Test
+This is a test PR to verify automated code review.
