@@ -95,10 +95,16 @@ Pull requests targeting `main` run Python dependency installation, Ruff checks, 
 
 Tax is a fixed illustrative rate; stock reservation uses the first matching warehouse; payment endpoints create pending provider-neutral intents and never process sensitive payment data; notifications are logged by the worker rather than sent externally. Account recovery, advanced rate limiting, secure-cookie sessions, and external observability integrations are production hardening items. See [operations](docs/operations.md) and [security](docs/security.md).
 
-
-
-
+sfffff
 
 VSecurePR provides intelligent pull request analysis.
+
+## SecurePR Deployment Test
+
+This is a test PR to verify automated code review.
+
 ## SecurePR Deployment Test
 This is a test PR to verify automated code review.
+
+## Latest Deployment Update
+Updated SecurePR CI check mapping and automated review workflow.
