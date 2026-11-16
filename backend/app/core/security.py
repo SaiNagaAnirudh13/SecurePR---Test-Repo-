@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta, timezone
+from typing import Any, cast
 from uuid import UUID
 
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError
 from pwdlib import PasswordHash
 
 from app.core.config import settings
@@ -11,11 +13,11 @@ password_hash = PasswordHash.recommended()
 
 
 def hash_password(password: str) -> str:
-    return password_hash.hash(password)
+    return cast(str, password_hash.hash(password))
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
-    return password_hash.verify(password, hashed_password)
+    return cast(bool, password_hash.verify(password, hashed_password))
 
 
 def create_access_token(user_id: UUID, role: str) -> str:
@@ -29,22 +31,23 @@ def create_access_token(user_id: UUID, role: str) -> str:
     )
 
 
-def decode_access_token(token: str) -> dict[str, str] | None:
+def decode_access_token(token: str) -> dict[str, Any] | None:
     try:
         return jwt.decode(
             token,
             settings.secret_key.get_secret_value(),
             algorithms=[ALGORITHM],
         )
-    except JWTError:
+    except InvalidTokenError:
         return None
 
 
 def token_subject(token: str) -> UUID | None:
     claims = decode_access_token(token)
-    if not claims or not claims.get("sub"):
+    subject = claims.get("sub") if claims else None
+    if not isinstance(subject, str):
         return None
     try:
-        return UUID(claims["sub"])
+        return UUID(subject)
     except ValueError:
         return None
