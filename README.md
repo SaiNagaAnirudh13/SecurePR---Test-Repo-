@@ -1,4 +1,4 @@
-# Enterprise Order Management Platform (EOMP) fghgf
+# Enterprise Order Management Platform (EOMP) fghgfSDSSC
 
 EOMP is a corporate-style order and fulfillment platform starter for customer account management, product catalog, warehouse inventory, order lifecycle, payment intent abstraction, shipment tracking, audit history, reporting and asynchronous notifications. It is designed as a realistic, testable target for engineering and Pull Request review.
 
