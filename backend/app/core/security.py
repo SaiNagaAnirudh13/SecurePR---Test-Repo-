@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from uuid import UUID
 
-from jose import JWTError, jwt
+import jwt
 from pwdlib import PasswordHash
 
 from app.core.config import settings
@@ -29,22 +29,23 @@ def create_access_token(user_id: UUID, role: str) -> str:
     )
 
 
-def decode_access_token(token: str) -> dict[str, str] | None:
+def decode_access_token(token: str) -> dict[str, object] | None:
     try:
         return jwt.decode(
             token,
             settings.secret_key.get_secret_value(),
             algorithms=[ALGORITHM],
         )
-    except JWTError:
+    except jwt.PyJWTError:
         return None
 
 
 def token_subject(token: str) -> UUID | None:
     claims = decode_access_token(token)
-    if not claims or not claims.get("sub"):
+    subject = claims.get("sub") if claims else None
+    if not isinstance(subject, str) or not subject:
         return None
     try:
-        return UUID(claims["sub"])
+        return UUID(subject)
     except ValueError:
         return None
