@@ -80,12 +80,12 @@ ruff format --check app tests alembic
 
 Frontend:
 
-```powershell
+````powershell
 Set-Location frontend
 npm ci
 npm run lint
 npm run build
-```
+```ssssss
 
 ## CI/CD
 
@@ -95,4 +95,7 @@ Pull requests targeting `main` run Python dependency installation, Ruff checks, 
 
 Tax is a fixed illustrative rate; stock reservation uses the first matching warehouse; payment endpoints create pending provider-neutral intents and never process sensitive payment data; notifications are logged by the worker rather than sent externally. Account recovery, advanced rate limiting, secure-cookie sessions, and external observability integrations are production hardening items. See [operations](docs/operations.md) and [security](docs/security.md).
 n## SecurePR CI Integration TestnTesting dynamic GitHubs CIs discovery.
-n## SecurePR CI Integration TestnTesting dynamic GitHubs CIs discovery.
+````
+
+## CI Integration Test Update
+Testing SecurePR automated review with a small README change.
