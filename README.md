@@ -97,3 +97,6 @@ Tax is a fixed illustrative rate; stock reservation uses the first matching ware
 
 ## SecurePR CI Integration Test
 Testing dynamic GitHub CI discovery.
+
+## CI Integration Test Update
+Testing SecurePR automated review with a small README change.
