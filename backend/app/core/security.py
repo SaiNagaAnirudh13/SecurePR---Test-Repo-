@@ -11,11 +11,17 @@ password_hash = PasswordHash.recommended()
 
 
 def hash_password(password: str) -> str:
-    return password_hash.hash(password)
+    hashed_password = password_hash.hash(password)
+    if not isinstance(hashed_password, str):
+        raise TypeError("PasswordHash.hash() must return a string")
+    return hashed_password
 
 
 def verify_password(password: str, hashed_password: str) -> bool:
-    return password_hash.verify(password, hashed_password)
+    is_valid = password_hash.verify(password, hashed_password)
+    if not isinstance(is_valid, bool):
+        raise TypeError("PasswordHash.verify() must return a boolean")
+    return is_valid
 
 
 def create_access_token(user_id: UUID, role: str) -> str:
