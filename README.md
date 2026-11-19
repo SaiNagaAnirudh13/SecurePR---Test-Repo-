@@ -104,3 +104,6 @@ Testing SecurePR automated review with a small README change.
 ## Risk Review Test
 
 This repository can be used to validate low-risk pull request review behavior.
+
+## Low-Risk Test
+This documentation update validates SecurePR's low-risk review workflow.
