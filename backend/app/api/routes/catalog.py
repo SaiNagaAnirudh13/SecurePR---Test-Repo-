@@ -60,11 +60,7 @@ def list_products(
     query = select(Product).order_by(Product.name)
     if category:
         query = query.where(Product.category == category)
-    return list(
-        db.scalars(
-            query.offset(offset).limit(min(limit, 100))
-        ).all()
-    )
+    return list(db.scalars(query.offset(offset).limit(min(limit, 100))).all())
 
 
 @products_router.post("", response_model=ProductRead, status_code=status.HTTP_201_CREATED)
