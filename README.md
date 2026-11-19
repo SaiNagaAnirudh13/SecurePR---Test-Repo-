@@ -98,4 +98,9 @@ n## SecurePR CI Integration TestnTesting dynamic GitHubs CIs discovery.
 ````
 
 ## CI Integration Test Update
+
 Testing SecurePR automated review with a small README change.
+
+## Risk Review Test
+
+This repository can be used to validate low-risk pull request review behavior.
