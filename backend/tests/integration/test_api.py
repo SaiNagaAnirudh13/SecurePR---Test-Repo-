@@ -56,3 +56,33 @@ def test_order_api_creates_order_and_audit_event(
     assert response.status_code == 201
     assert response.json()["status"] == "confirmed"
     assert response.json()["total_amount"] == "649.48"
+
+
+def test_products_can_be_filtered_by_category(
+    client: TestClient, db: Session, auth_headers: dict[str, str]
+) -> None:
+    db.add_all(
+        [
+            Product(
+                sku="CON-DISP-01",
+                name="External Display",
+                category="Displays",
+                unit_price=Decimal("399.99"),
+            ),
+            Product(
+                sku="CON-CABLE-01",
+                name="USB-C Cable",
+                category="Cables",
+                unit_price=Decimal("19.99"),
+            ),
+        ]
+    )
+    db.commit()
+
+    response = client.get(
+        "/api/v1/products?category=Displays",
+        headers=auth_headers,
+    )
+
+    assert response.status_code == 200
+    assert [product["sku"] for product in response.json()] == ["CON-DISP-01"]

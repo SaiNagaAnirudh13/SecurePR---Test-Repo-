@@ -51,11 +51,18 @@ def create_customer(
 
 @products_router.get("", response_model=list[ProductRead])
 def list_products(
-    db: DbSession, user: CurrentUser, offset: int = 0, limit: int = 50
+    db: DbSession,
+    user: CurrentUser,
+    category: str | None = None,
+    offset: int = 0,
+    limit: int = 50,
 ) -> list[Product]:
+    query = select(Product).order_by(Product.name)
+    if category:
+        query = query.where(Product.category == category)
     return list(
         db.scalars(
-            select(Product).order_by(Product.name).offset(offset).limit(min(limit, 100))
+            query.offset(offset).limit(min(limit, 100))
         ).all()
     )
 
