@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field, StringConstraints
 
 from app.schemas.common import UserSummary
 
-
 EmailAddress = Annotated[
     str,
     StringConstraints(strip_whitespace=True, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"),
