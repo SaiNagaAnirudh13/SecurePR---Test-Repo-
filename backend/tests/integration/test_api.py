@@ -3,7 +3,8 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Customer, InventoryItem, Product
+from app.core.security import hash_password
+from app.models import Customer, InventoryItem, Product, Role, User
 
 
 def test_authentication_and_protected_catalog(
@@ -56,3 +57,28 @@ def test_order_api_creates_order_and_audit_event(
     assert response.status_code == 201
     assert response.json()["status"] == "confirmed"
     assert response.json()["total_amount"] == "649.48"
+
+
+def test_audit_log_access_is_available_to_authorized_reporting_roles(
+    client: TestClient, db: Session
+) -> None:
+    role = Role(name="analyst", description="Reporting analyst")
+    db.add(role)
+    db.flush()
+    analyst = User(
+        email="analyst@example.com",
+        full_name="Test Analyst",
+        password_hash=hash_password("Correct-Horse-42!"),
+        role_id=role.id,
+    )
+    db.add(analyst)
+    db.commit()
+
+    login = client.post(
+        "/api/v1/auth/token",
+        json={"email": analyst.email, "password": "Correct-Horse-42!"},
+    )
+    headers = {"Authorization": f"Bearer {login.json()['access_token']}"}
+
+    assert login.status_code == 200
+    assert client.get("/api/v1/admin/audit-logs", headers=headers).status_code == 200
