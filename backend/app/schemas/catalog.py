@@ -2,18 +2,22 @@ from decimal import Decimal
 from typing import Annotated
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr, Field, StringConstraints, field_validator
+from pydantic import BaseModel, Field, StringConstraints, field_validator
 
 from app.schemas.common import ORMModel
 
 Code = Annotated[str, StringConstraints(strip_whitespace=True, min_length=2, max_length=50)]
+EmailAddress = Annotated[
+    str,
+    StringConstraints(strip_whitespace=True, pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$"),
+]
 
 
 class CustomerCreate(BaseModel):
     account_number: Code
     company_name: str = Field(min_length=2, max_length=180)
     contact_name: str = Field(min_length=2, max_length=160)
-    email: EmailStr
+    email: EmailAddress
     phone: str | None = Field(default=None, max_length=40)
     billing_address: str = Field(min_length=5, max_length=2000)
     shipping_address: str = Field(min_length=5, max_length=2000)
