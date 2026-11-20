@@ -2,6 +2,8 @@ from datetime import datetime, timedelta, timezone
 from uuid import uuid4
 
 import jwt
+import pytest
+from pydantic import SecretStr
 
 from app.core.config import settings
 from app.core.security import (
@@ -44,3 +46,27 @@ def test_access_token_rejects_expired_and_invalid_tokens() -> None:
 
     assert decode_access_token(expired_token) is None
     assert decode_access_token("not-a-jwt") is None
+
+
+def test_access_token_rejects_invalid_signature() -> None:
+    token = jwt.encode(
+        {"sub": str(uuid4()), "role": "admin"},
+        f"{settings.secret_key.get_secret_value()}-wrong",
+        algorithm="HS256",
+    )
+
+    assert decode_access_token(token) is None
+
+
+def test_access_token_rejects_unsupported_algorithm(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    secret = "s" * 48
+    monkeypatch.setattr(settings, "secret_key", SecretStr(secret))
+    token = jwt.encode(
+        {"sub": str(uuid4()), "role": "admin"},
+        secret,
+        algorithm="HS384",
+    )
+
+    assert decode_access_token(token) is None
