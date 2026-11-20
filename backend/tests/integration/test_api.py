@@ -3,7 +3,7 @@ from decimal import Decimal
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Customer, InventoryItem, Product
+from app.models import Customer, InventoryItem, Product, User
 
 
 def test_authentication_and_protected_catalog(
@@ -12,6 +12,40 @@ def test_authentication_and_protected_catalog(
     assert client.get("/api/v1/auth/me", headers=auth_headers).status_code == 200
     assert client.get("/api/v1/products").status_code == 401
     assert client.get("/health").json() == {"status": "ok"}
+
+
+def test_login_preserves_bearer_response_contract(client: TestClient, admin_user: User) -> None:
+    response = client.post(
+        "/api/v1/auth/token",
+        json={"email": admin_user.email, "password": "Correct-Horse-42!"},
+    )
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["token_type"] == "bearer"
+    assert result["user"] == {
+        "id": str(admin_user.id),
+        "email": admin_user.email,
+        "full_name": admin_user.full_name,
+        "role": "admin",
+    }
+    assert (
+        client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {result['access_token']}"},
+        ).status_code
+        == 200
+    )
+
+
+def test_login_rejects_invalid_credentials(client: TestClient, admin_user: User) -> None:
+    response = client.post(
+        "/api/v1/auth/token",
+        json={"email": admin_user.email, "password": "Wrong-password"},
+    )
+
+    assert response.status_code == 401
+    assert response.headers["www-authenticate"] == "Bearer"
 
 
 def test_order_api_creates_order_and_audit_event(

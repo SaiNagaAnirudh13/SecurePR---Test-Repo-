@@ -1,13 +1,15 @@
 from datetime import datetime, timedelta, timezone
+from typing import Any
 from uuid import UUID
 
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError
 from pwdlib import PasswordHash
 
 from app.core.config import settings
 
 ALGORITHM = "HS256"
-password_hash = PasswordHash.recommended()
+password_hash: PasswordHash = PasswordHash.recommended()
 
 
 def hash_password(password: str) -> str:
@@ -29,14 +31,14 @@ def create_access_token(user_id: UUID, role: str) -> str:
     )
 
 
-def decode_access_token(token: str) -> dict[str, str] | None:
+def decode_access_token(token: str) -> dict[str, Any] | None:
     try:
         return jwt.decode(
             token,
             settings.secret_key.get_secret_value(),
             algorithms=[ALGORITHM],
         )
-    except JWTError:
+    except InvalidTokenError:
         return None
 
 
