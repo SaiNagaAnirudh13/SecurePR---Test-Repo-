@@ -99,3 +99,6 @@ n## SecurePR CI Integration TestnTesting dynamic GitHubs CIs discovery.
 
 ## CI Integration Test Update
 Testing SecurePR automated review with a small README change.
+
+## SecurePR Auto-Merge Test
+This is a small documentation-only change to validate automated low-risk pull request review and merge.
