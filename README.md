@@ -114,3 +114,6 @@ Testing another small README-only change.
 
 ## SecurePR Auto-Merge Test 2
 Testing a minimal README-only change.
+
+## SecurePR Auto-Merge Test 2
+Testing a minimal README-only change.
