@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from app.schemas.common import ORMModel
 
@@ -17,6 +17,12 @@ class OrderCreate(BaseModel):
     customer_id: UUID
     items: list[OrderLineCreate] = Field(min_length=1, max_length=100)
     notes: str = Field(default="", max_length=2000)
+
+    @model_validator(mode="after")
+    def validate_total_quantity(self) -> "OrderCreate":
+        if sum(item.quantity for item in self.items) > 10000:
+            raise ValueError("total order quantity must not exceed 10000")
+        return self
 
 
 class OrderItemRead(ORMModel):
