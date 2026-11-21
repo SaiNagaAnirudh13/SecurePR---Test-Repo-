@@ -131,3 +131,7 @@ Validation conditions:
 - The pull request head revision must remain unchanged.
 - GitHub must confirm that the pull request has been successfully merged.
 
+## SecurePR Review Workflow
+
+SecurePR reviews pull requests for risk and policy compliance before they are eligible for automatic approval or merging. Reviewers can use the reported risk level and required checks to guide their review.
+
