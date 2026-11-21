@@ -1,9 +1,11 @@
 from decimal import Decimal
+from uuid import uuid4
 
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
-from app.models import Customer, InventoryItem, Product, User
+from app.core.security import create_access_token
+from app.models import Customer, InventoryItem, Product, Role, User
 
 
 def test_authentication_and_protected_catalog(
@@ -90,3 +92,26 @@ def test_order_api_creates_order_and_audit_event(
     assert response.status_code == 201
     assert response.json()["status"] == "confirmed"
     assert response.json()["total_amount"] == "649.48"
+
+
+def test_order_reads_require_reporting_role(
+    client: TestClient,
+    db: Session,
+    auth_headers: dict[str, str],
+) -> None:
+    role = Role(name="viewer", description="Non-reporting user")
+    db.add(role)
+    db.flush()
+    viewer = User(
+        email="viewer@example.com",
+        full_name="Read-only Viewer",
+        password_hash="unused",
+        role_id=role.id,
+    )
+    db.add(viewer)
+    db.commit()
+    viewer_headers = {"Authorization": f"Bearer {create_access_token(viewer.id, role.name)}"}
+
+    assert client.get("/api/v1/orders", headers=auth_headers).status_code == 200
+    assert client.get("/api/v1/orders", headers=viewer_headers).status_code == 403
+    assert client.get(f"/api/v1/orders/{uuid4()}", headers=viewer_headers).status_code == 403

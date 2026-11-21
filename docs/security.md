@@ -3,6 +3,7 @@
 - Secrets are loaded from environment variables; `.env` is excluded from Git. Production startup rejects the development JWT key and requires at least 32 characters.
 - Passwords are hashed with Argon2 through `pwdlib`; raw passwords are never stored. Bootstrap credentials are supplied interactively through an operator-controlled command, never committed.
 - JWTs are signed with HS256, have a bounded expiration, and are validated on protected routes. The user must remain active, and role checks use the current database role.
+- Order lists and details are limited to admin, analyst, and operations roles; order mutations and payment-intent creation require admin or operations access.
 - Customer and order inputs are constrained with Pydantic. SQLAlchemy uses parameterized statements. Inventory adjustments and order transitions are auditable.
 - CORS allows only configured origins. The API emits generic server errors while logging structured diagnostics server-side.
 - Payment records contain amounts and provider references only. The platform does not accept or persist card numbers, CVVs, or bank credentials.
