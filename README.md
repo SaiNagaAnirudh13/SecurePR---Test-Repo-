@@ -111,3 +111,23 @@ Testing another small README-only change.
 
 ## SecurePR Auto-Merge Retest
 Testing another small README-only change.
+
+## SecurePR Auto-Merge Test 2
+Testing a minimal README-only change.
+
+## SecurePR Auto-Merge Test 2
+Testing a minimal README-only change.
+
+## SecurePR Automated Merge Gate Test
+
+An eligible pull request must satisfy all configured security and repository requirements before merging.
+
+Validation conditions:
+
+- The pull request author must match the configured SecurePR policy.
+- The security risk score must be within the configured threshold.
+- The required GitHub approval must be present.
+- All mandatory CI checks must pass.
+- The pull request head revision must remain unchanged.
+- GitHub must confirm that the pull request has been successfully merged.
+
