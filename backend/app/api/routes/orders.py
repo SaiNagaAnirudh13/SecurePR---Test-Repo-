@@ -2,7 +2,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, HTTPException, Query, status
 
-from app.api.deps import AdminOperationsUser, CurrentUser, DbSession
+from app.api.deps import AdminOperationsUser, CurrentUser, DbSession, ReportingUser
 from app.core.errors import DomainError
 from app.models import Order, Payment
 from app.repositories.orders import list_orders
@@ -25,7 +25,7 @@ def _domain_error(error: DomainError) -> HTTPException:
 @router.get("", response_model=list[OrderRead])
 def get_orders(
     db: DbSession,
-    user: CurrentUser,
+    user: ReportingUser,
     offset: int = Query(default=0, ge=0),
     limit: int = Query(default=50, ge=1, le=100),
 ) -> list[Order]:
@@ -48,7 +48,7 @@ def post_order(payload: OrderCreate, db: DbSession, user: CurrentUser) -> Order:
 
 
 @router.get("/{order_id}", response_model=OrderRead)
-def get_order_detail(order_id: UUID, db: DbSession, user: CurrentUser) -> Order:
+def get_order_detail(order_id: UUID, db: DbSession, user: ReportingUser) -> Order:
     try:
         return get_order(db, order_id)
     except DomainError as error:
